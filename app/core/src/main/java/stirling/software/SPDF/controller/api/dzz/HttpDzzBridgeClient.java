@@ -68,7 +68,7 @@ public class HttpDzzBridgeClient implements DzzBridgeClient {
         try {
             String separator = bridgeUrl.contains("?") ? "&" : "?";
             HttpRequest.Builder request =
-                    HttpRequest.newBuilder(URI.create(bridgeUrl + separator + "op=" + operation))
+                    HttpRequest.newBuilder(URI.create(bridgeUrl + separator + "bridge=" + operation))
                             .timeout(REQUEST_TIMEOUT)
                             .header("X-Dzz-Pdf-Job", job)
                             .POST(body);
