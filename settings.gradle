@@ -1,5 +1,10 @@
 pluginManagement {
     repositories {
+        var stirlingMavenMirror = System.getenv("STIRLING_MAVEN_MIRROR") ?: ""
+        if (!stirlingMavenMirror.isEmpty()) {
+            maven { url stirlingMavenMirror }
+            maven { url stirlingMavenMirror.replace('/maven-public', '/gradle-plugins') }
+        }
         var gradlePluginPortalUrl = System.getenv("MAVEN_PUBLIC_URL") ?: ""
         if (!gradlePluginPortalUrl.isEmpty()){
             maven {

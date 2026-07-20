@@ -15,6 +15,10 @@ export interface DownloadResult {
 export async function downloadFile(
   request: DownloadRequest,
 ): Promise<DownloadResult> {
+  if (isDzzOfficeBridgeActive()) {
+    const saved = await saveDzzOfficePdf(request.data, request.filename);
+    if (saved) return {};
+  }
   const url = URL.createObjectURL(request.data);
 
   const link = document.createElement("a");
@@ -34,6 +38,16 @@ export async function downloadFromUrl(
   filename: string,
   localPath?: string,
 ): Promise<DownloadResult> {
+  if (
+    isDzzOfficeBridgeActive() &&
+    filename.toLowerCase().endsWith(".pdf")
+  ) {
+    const response = await fetch(url, { credentials: "same-origin" });
+    if (!response.ok) {
+      throw new Error("Unable to download the PDF result for DzzOffice");
+    }
+    if (await saveDzzOfficePdf(await response.blob(), filename)) return {};
+  }
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;
@@ -43,3 +57,7 @@ export async function downloadFromUrl(
 
   return { savedPath: localPath };
 }
+import {
+  isDzzOfficeBridgeActive,
+  saveDzzOfficePdf,
+} from "@app/services/dzzOfficeBridge";

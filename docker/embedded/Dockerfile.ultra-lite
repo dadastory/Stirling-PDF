@@ -20,6 +20,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+# The Dzz integration image is normally built in mainland China.  Keep Gradle
+# downloads on the domestic mirror and do not inherit a host proxy.
+ENV STIRLING_MAVEN_MIRROR=https://mirrors.cloud.tencent.com/nexus/repository/maven-public \
+    HTTP_PROXY= \
+    HTTPS_PROXY= \
+    ALL_PROXY= \
+    http_proxy= \
+    https_proxy= \
+    all_proxy=
+
 # Copy gradle files for dependency resolution
 COPY build.gradle settings.gradle gradlew ./
 COPY gradle/                               gradle/

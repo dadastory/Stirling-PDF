@@ -65,6 +65,7 @@ ext.isSecurityDisabled = { ->
 }
 
 ext.mavenUrl = System.getenv("MAVEN_PUBLIC_URL") ?: ""
+ext.stirlingMavenMirror = System.getenv("STIRLING_MAVEN_MIRROR") ?: ""
 ext.username = System.getenv('MAVEN_USER') ?: ""
 ext.password = System.getenv('MAVEN_PASSWORD') ?: ""
 
@@ -187,6 +188,9 @@ subprojects {
     }
 
     repositories {
+        if (!rootProject.ext.stirlingMavenMirror.isEmpty()) {
+            maven { url = rootProject.ext.stirlingMavenMirror }
+        }
         if (!rootProject.ext.mavenUrl.isEmpty()) {
             maven {
                 url = rootProject.ext.mavenUrl + '/releases'
@@ -593,6 +597,9 @@ swaggerhubUpload {
 }
 
 repositories {
+    if (!rootProject.ext.stirlingMavenMirror.isEmpty()) {
+        maven { url = rootProject.ext.stirlingMavenMirror }
+    }
     if (!rootProject.ext.mavenUrl.isEmpty()) {
         maven {
             url = rootProject.ext.mavenUrl + '/releases'
