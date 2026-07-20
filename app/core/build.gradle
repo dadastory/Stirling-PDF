@@ -201,8 +201,6 @@ if (buildPrototypes) {
 } else {
     frontendMode = 'proprietary'
 }
-def frontendBuildTask = "frontend:build:${frontendMode}"
-
 // Workspace root holds package.json and node_modules (shared across editor /
 // future portal). Editor-specific paths (src, public, dist, tauri) live one
 // level deeper under frontend/editor/. When the portal lands as an embedded
@@ -211,6 +209,9 @@ def frontendDir = file('../../frontend')
 def frontendEditorDir = file('../../frontend/editor')
 def frontendEditorDistDir = file('../../frontend/editor/dist')
 def resourcesStaticDir = file('src/main/resources/static')
+def frontendNpxCommand = Os.isFamily(Os.FAMILY_WINDOWS) ? ['cmd', '/c', 'npx'] : ['npx']
+def frontendNodeCommand = Os.isFamily(Os.FAMILY_WINDOWS) ? ['cmd', '/c', 'node'] : ['node']
+def frontendSetupArguments = frontendMode == 'saas' || frontendMode == 'desktop' ? ["--${frontendMode}"] : []
 def generatedFrontendPaths = [
     'assets',
     'index.html',
@@ -286,13 +287,47 @@ tasks.register('npmInstall', Exec) {
     }
 }
 
+tasks.register('prepareFrontendEnvironment', Exec) {
+    enabled = buildWithFrontend
+    group = 'frontend'
+    description = 'Prepare frontend environment files'
+    workingDir frontendDir
+    commandLine = frontendNpxCommand + ['tsx', 'editor/scripts/setup-env.mts'] + frontendSetupArguments
+    dependsOn npmInstall
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
+tasks.register('generateFrontendIcons', Exec) {
+    enabled = buildWithFrontend
+    group = 'frontend'
+    description = 'Generate frontend icon metadata'
+    workingDir frontendDir
+    commandLine = frontendNodeCommand + ['editor/scripts/generate-icons.js']
+    dependsOn npmInstall
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
+tasks.register('generateFrontendOgMetadata', Exec) {
+    enabled = buildWithFrontend
+    group = 'frontend'
+    description = 'Generate frontend social-preview metadata'
+    workingDir frontendDir
+    commandLine = frontendNodeCommand + ['editor/scripts/generate-og-metadata.mjs']
+    dependsOn npmInstall
+    standardOutput = System.out
+    errorOutput = System.err
+}
+
 tasks.register('npmBuild', Exec) {
     doNotTrackState("Frontend build depends on untracked npmInstall task")
     enabled = buildWithFrontend
     group = 'frontend'
     description = 'Build editor frontend application'
-    workingDir file('../..')
-    commandLine = ['task', frontendBuildTask]
+    workingDir frontendDir
+    commandLine = frontendNpxCommand + ['vite', 'build', 'editor', '--mode', frontendMode]
+    dependsOn prepareFrontendEnvironment, generateFrontendIcons, generateFrontendOgMetadata
     inputs.dir(new File(frontendEditorDir, 'src'))
     inputs.dir(new File(frontendEditorDir, 'public'))
     inputs.file(new File(frontendDir, 'package.json'))

@@ -4,31 +4,36 @@
 # Stage 1: Build application with embedded frontend
 FROM gradle:9.6.0-jdk25@sha256:e3905233ae349e72016daf8a0e19f085a1dd89ded8ec88b3d8335d3fd0b350f4 AS build
 
-# Install Node.js and npm for frontend build
-ARG TASK_VERSION=3.49.1
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
-    && npm --version \
-    && node --version \
-    && ARCH=$(dpkg --print-architecture) \
-    && curl -fsSL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_${TASK_VERSION}_linux_${ARCH}.deb" -o /tmp/task.deb \
-    && dpkg -i /tmp/task.deb \
-    && rm /tmp/task.deb \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-# The Dzz integration image is normally built in mainland China.  Keep Gradle
-# downloads on the domestic mirror and do not inherit a host proxy.
+# Install Node.js and npm for frontend build. APT, npm and Gradle use
+# mainland-China mirrors; NodeSource remains only as the Node 20 package source.
+ARG NODE_MAJOR=20
 ENV STIRLING_MAVEN_MIRROR=https://mirrors.cloud.tencent.com/nexus/repository/maven-public \
+    NPM_CONFIG_REGISTRY=https://registry.npmmirror.com \
+    NPM_CONFIG_REPLACE_REGISTRY_HOST=always \
     HTTP_PROXY= \
     HTTPS_PROXY= \
     ALL_PROXY= \
     http_proxy= \
     https_proxy= \
     all_proxy=
+RUN find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) \
+      -exec sed -i \
+      -e 's|archive.ubuntu.com|mirrors.aliyun.com|g' \
+      -e 's|security.ubuntu.com|mirrors.aliyun.com|g' \
+      {} + \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && curl --fail --show-error --location --retry 5 --retry-all-errors --connect-timeout 20 \
+         "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" \
+         -o /tmp/nodesource-setup.sh \
+    && bash /tmp/nodesource-setup.sh \
+    && apt-get install -y --no-install-recommends nodejs \
+    && npm --version \
+    && node --version \
+    && rm -f /tmp/nodesource-setup.sh \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
 
 # Copy gradle files for dependency resolution
 COPY build.gradle settings.gradle gradlew ./
@@ -108,6 +113,11 @@ ENV VERSION_TAG=$VERSION_TAG \
 # Install minimal dependencies
 RUN mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipeline/finishedFolders /storage /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps && \
     mkdir -p /usr/share/fonts/opentype/noto && \
+    find /etc/apt -type f \( -name '*.list' -o -name '*.sources' \) \
+      -exec sed -i \
+      -e 's|archive.ubuntu.com|mirrors.aliyun.com|g' \
+      -e 's|security.ubuntu.com|mirrors.aliyun.com|g' \
+      {} + && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
     ca-certificates \

@@ -1,5 +1,8 @@
 pluginManagement {
     repositories {
+        // Contains Gradle plugin markers and artifacts that the Tencent public
+        // repository does not mirror (for example dependency-license-report).
+        maven { url "https://maven.aliyun.com/repository/gradle-plugin" }
         var stirlingMavenMirror = System.getenv("STIRLING_MAVEN_MIRROR") ?: ""
         if (!stirlingMavenMirror.isEmpty()) {
             maven { url stirlingMavenMirror }
