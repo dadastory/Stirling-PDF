@@ -49,10 +49,10 @@ public class HttpDzzBridgeClient implements DzzBridgeClient {
         byte[] opening =
                 ("--"
                                 + boundary
-                                + "\\r\\nContent-Disposition: form-data; name=\\\"file\\\"; filename=\\\"result.pdf\\\""
-                                + "\\r\\nContent-Type: application/pdf\\r\\n\\r\\n")
+                                + "\r\nContent-Disposition: form-data; name=\"file\"; filename=\"result.pdf\""
+                                + "\r\nContent-Type: application/pdf\r\n\r\n")
                         .getBytes(StandardCharsets.US_ASCII);
-        byte[] closing = ("\\r\\n--" + boundary + "--\\r\\n").getBytes(StandardCharsets.US_ASCII);
+        byte[] closing = ("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.US_ASCII);
         return send(
                 job,
                 "save",
@@ -68,7 +68,8 @@ public class HttpDzzBridgeClient implements DzzBridgeClient {
         try {
             String separator = bridgeUrl.contains("?") ? "&" : "?";
             HttpRequest.Builder request =
-                    HttpRequest.newBuilder(URI.create(bridgeUrl + separator + "bridge=" + operation))
+                    HttpRequest.newBuilder(
+                                    URI.create(bridgeUrl + separator + "bridge=" + operation))
                             .timeout(REQUEST_TIMEOUT)
                             .header("X-Dzz-Pdf-Job", job)
                             .POST(body);

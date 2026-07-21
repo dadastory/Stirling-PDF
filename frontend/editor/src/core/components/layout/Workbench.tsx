@@ -18,6 +18,8 @@ import WorkbenchBar from "@app/components/shared/WorkbenchBar";
 import LandingPage from "@app/components/shared/LandingPage";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
 import { ChatFAB } from "@app/components/chat/ChatFAB";
+import { isDzzOfficeMode } from "@app/services/dzzOfficeMode";
+import DzzOfficeSessionBar from "@app/components/dzz/DzzOfficeSessionBar";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
 // full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
@@ -34,6 +36,7 @@ const FileManagerView = lazy(
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
+  const dzzOfficeMode = isDzzOfficeMode();
   const { config } = useAppConfig();
 
   // The consent banner used to be initialised by the footer; the legal links
@@ -113,7 +116,7 @@ export default function Workbench() {
 
     // The "My Files" workbench is available regardless of whether files are
     // currently loaded into the workbench - it lives on top of the IDB store.
-    if (currentView === "myFiles") {
+    if (!dzzOfficeMode && currentView === "myFiles") {
       return <FileManagerView />;
     }
 
@@ -137,6 +140,7 @@ export default function Workbench() {
     }
 
     if (activeFiles.length === 0) {
+      if (dzzOfficeMode) return <Center style={{ height: "100%" }}>正在读取 DzzOffice 文件…</Center>;
       return <LandingPage />;
     }
 
@@ -221,7 +225,7 @@ export default function Workbench() {
       style={{ backgroundColor: "var(--bg-background)", minWidth: 0 }}
     >
       {/* Workbench Bar - animates in/out based on file presence */}
-      {currentView !== "myFiles" &&
+      {dzzOfficeMode ? <DzzOfficeSessionBar /> : currentView !== "myFiles" &&
         !customWorkbenchViews.find((v) => v.workbenchId === currentView)
           ?.hideTopControls && (
           <div

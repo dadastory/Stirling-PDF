@@ -57,10 +57,12 @@ COPY . .
 # Build ultra-lite JAR with embedded frontend (minimal features).
 # Embed the admin portal app at /portal when the deploy workflow flags it.
 ARG BUILD_PORTAL=false
+ARG DZZ_OFFICE_MODE=false
 # Bundle only the JPDFium native for this image's target arch.
 ARG TARGETARCH
 RUN JPDFIUM_PLATFORM="$([ "$TARGETARCH" = arm64 ] && echo linux-arm64 || echo linux-x64)" && \
     DISABLE_ADDITIONAL_FEATURES=true \
+    VITE_DZZ_OFFICE_MODE="$DZZ_OFFICE_MODE" \
     ./gradlew clean build \
       -PbuildWithFrontend=true \
       -PbuildWithPortal=${BUILD_PORTAL} \

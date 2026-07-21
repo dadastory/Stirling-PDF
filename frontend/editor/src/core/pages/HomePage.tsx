@@ -40,6 +40,8 @@ import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
 import { Button } from "@app/ui/Button";
 import "@app/pages/HomePage.css";
+import { isDzzOfficeMode } from "@app/services/dzzOfficeMode";
+import DzzOfficeWorkspace from "@app/components/dzz/DzzOfficeWorkspace";
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";
 
@@ -67,6 +69,10 @@ function writePersistedSidebarCollapsed(collapsed: boolean): void {
 type MobileView = "tools" | "workbench";
 
 export default function HomePage() {
+  return isDzzOfficeMode() ? <DzzOfficeWorkspace /> : <StandardHomePage />;
+}
+
+function StandardHomePage() {
   const { t } = useTranslation();
   const { sidebarRefs } = useSidebarContext();
 

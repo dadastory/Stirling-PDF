@@ -38,6 +38,7 @@ import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
 import { FolderFileContextProvider } from "@app/contexts/FolderFileContext";
 import { FolderProvider } from "@app/contexts/FolderContext";
 import { DzzOfficeBridgeBootstrap } from "@app/components/DzzOfficeBridgeBootstrap";
+import { isDzzOfficeMode } from "@app/services/dzzOfficeMode";
 
 // Component to initialize scarf tracking (must be inside AppConfigProvider)
 function ScarfTrackingInitializer() {
@@ -120,6 +121,7 @@ export function AppProviders({
   appConfigRetryOptions,
   appConfigProviderProps,
 }: AppProvidersProps) {
+  const dzzOfficeMode = isDzzOfficeMode();
   return (
     <PreferencesProvider>
       <ThemeProvider>
@@ -138,9 +140,9 @@ export function AppProviders({
               <UpdateStartupPopup />
               <FileContextProvider
                 enableUrlSync={true}
-                enablePersistence={true}
+                enablePersistence={!dzzOfficeMode}
               >
-                <DzzOfficeBridgeBootstrap />
+                {dzzOfficeMode && <DzzOfficeBridgeBootstrap />}
                 <FolderProvider>
                   <AppInitializer />
                   <BrandingAssetManager />
